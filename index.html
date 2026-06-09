@@ -1,99 +1,384 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WM 2026 – Familienplan</title>
-  <style>
-    :root {
-      --grün: #1a7f4b;
-      --gold: #f5b800;
-      --dunkel: #0d2b1d;
-      --hell: #f7faf8;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      color: var(--dunkel);
-      background: var(--hell);
-      line-height: 1.6;
-    }
-    header {
-      background: linear-gradient(135deg, var(--grün), var(--dunkel));
-      color: #fff;
-      padding: 3rem 1.5rem;
-      text-align: center;
-    }
-    header h1 { font-size: clamp(1.8rem, 5vw, 3rem); }
-    header p { opacity: .9; margin-top: .5rem; }
-    .badge {
-      display: inline-block;
-      background: var(--gold);
-      color: var(--dunkel);
-      font-weight: 700;
-      padding: .3rem .9rem;
-      border-radius: 999px;
-      margin-bottom: 1rem;
-      letter-spacing: .5px;
-    }
-    main { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .karte {
-      background: #fff;
-      border: 1px solid #e3ece7;
-      border-radius: 14px;
-      padding: 1.5rem;
-      margin-bottom: 1.25rem;
-      box-shadow: 0 2px 10px rgba(13,43,29,.05);
-    }
-    .karte h2 { color: var(--grün); margin-bottom: .5rem; font-size: 1.25rem; }
-    ul { padding-left: 1.2rem; }
-    li { margin: .25rem 0; }
-    footer {
-      text-align: center;
-      padding: 2rem 1rem;
-      color: #6a7a72;
-      font-size: .9rem;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WM 2026 – Familienplan (bis 21:00 Uhr + alle DFB-Spiele)</title>
+<style>
+  :root {
+    --gruen: #00a86b;
+    --hellgruen: #e8f7f0;
+    --dunkel: #1a1a2e;
+    --mittel: #16213e;
+    --akzent: #f5a623;
+    --rot: #e74c3c;
+    --blau: #2980b9;
+    --grau: #f4f6f9;
+    --text: #2c3e50;
+    --border: #dde3ea;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #f0f3f8;
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(135deg, var(--dunkel) 0%, var(--mittel) 100%);
+    color: white;
+    padding: 28px 24px 20px;
+    text-align: center;
+  }
+  header h1 { font-size: 1.7rem; font-weight: 700; letter-spacing: -0.5px; }
+  header p { font-size: 0.9rem; opacity: 0.75; margin-top: 6px; }
+  .badge {
+    display: inline-block; background: var(--akzent); color: #111;
+    font-size: 0.7rem; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; margin-top: 10px; letter-spacing: 0.5px;
+  }
+  .stats {
+    display: flex; gap: 12px; justify-content: center;
+    flex-wrap: wrap; padding: 16px 20px;
+    background: white; border-bottom: 1px solid var(--border);
+  }
+  .stat {
+    text-align: center; padding: 10px 18px;
+    background: var(--grau); border-radius: 10px;
+  }
+  .stat-num { font-size: 1.6rem; font-weight: 800; color: var(--gruen); line-height: 1; }
+  .stat-label { font-size: 0.7rem; color: #888; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .filter-bar {
+    padding: 14px 20px; background: white;
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .filter-bar span { font-size: 0.8rem; font-weight: 600; color: #888; margin-right: 4px; }
+  .btn {
+    padding: 6px 14px; border-radius: 20px; border: 2px solid var(--border);
+    background: white; cursor: pointer; font-size: 0.78rem; font-weight: 600;
+    color: var(--text); transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--gruen); color: var(--gruen); }
+  .btn.active { background: var(--gruen); color: white; border-color: var(--gruen); }
+  .btn.de { border-color: #000; background: #f9e600; color: #000; }
+  .btn.de.active { background: #000; color: #f9e600; border-color: #000; }
+
+  .main { padding: 16px 20px; max-width: 1100px; margin: 0 auto; }
+  .phase-block { margin-bottom: 28px; }
+  .phase-title {
+    font-size: 0.75rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #888; margin-bottom: 10px;
+    padding-left: 4px; border-left: 3px solid var(--gruen); padding-left: 10px;
+  }
+  .day-block { margin-bottom: 16px; }
+  .day-header {
+    font-size: 0.8rem; font-weight: 700; color: var(--mittel);
+    margin-bottom: 6px; display: flex; align-items: center; gap: 8px;
+  }
+  .day-header .count {
+    background: var(--grau); color: #888; font-size: 0.68rem;
+    padding: 2px 7px; border-radius: 10px;
+  }
+
+  .game {
+    background: white; border-radius: 10px; padding: 12px 16px;
+    margin-bottom: 6px; display: flex; align-items: center; gap: 12px;
+    border: 1px solid var(--border); transition: box-shadow 0.15s;
+    cursor: default;
+  }
+  .game:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .game.highlighted { border-left: 4px solid #000; background: #fffde7; }
+  .game.hidden { display: none; }
+
+  .time-badge {
+    min-width: 56px; text-align: center;
+    font-size: 1rem; font-weight: 800; color: var(--gruen);
+    line-height: 1.1;
+  }
+  .time-badge small {
+    display: block; font-size: 0.6rem; font-weight: 500;
+    color: #aaa; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .divider { width: 1px; height: 36px; background: var(--border); flex-shrink: 0; }
+
+  .teams { flex: 1; }
+  .matchup {
+    font-size: 0.95rem; font-weight: 700; color: var(--dunkel);
+  }
+  .matchup .de-flag { font-size: 0.8rem; }
+  .meta {
+    font-size: 0.72rem; color: #aaa; margin-top: 2px;
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .group-tag {
+    background: var(--grau); color: #666; font-size: 0.65rem;
+    font-weight: 700; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.3px;
+  }
+  .group-tag.ko { background: #fff0f0; color: var(--rot); }
+  .group-tag.semi { background: #fff5e6; color: #e67e22; }
+  .group-tag.final { background: #f0fff4; color: var(--gruen); }
+
+  .tv-tag {
+    font-size: 0.65rem; font-weight: 700; padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .tv-ard { background: #003399; color: white; }
+  .tv-zdf { background: #008c45; color: white; }
+  .tv-magenta { background: #e2007a; color: white; }
+
+  .empty-state {
+    text-align: center; padding: 40px 20px; color: #aaa;
+    font-size: 0.9rem;
+  }
+
+  .game.highlighted .time-badge { color: #c0392b; }
+  .game.highlighted .time-badge.latenight::after {
+    content: " ★"; font-size: 0.6rem;
+  }
+    text-align: center; padding: 20px; font-size: 0.72rem;
+    color: #bbb; border-top: 1px solid var(--border);
+  }
+</style>
 </head>
 <body>
-  <header>
-    <span class="badge">⚽ FIFA WM 2026</span>
-    <h1>Familienplan zur WM 2026</h1>
-    <p>USA · Kanada · Mexiko — 11. Juni bis 19. Juli 2026</p>
-  </header>
 
-  <main>
-    <section class="karte">
-      <h2>📅 Wichtige Termine</h2>
-      <ul>
-        <li>Eröffnungsspiel: 11. Juni 2026</li>
-        <li>Achtelfinale: ab 28. Juni 2026</li>
-        <li>Finale: 19. Juli 2026</li>
-      </ul>
-    </section>
+<header>
+  <h1>⚽ WM 2026 – Familienplan</h1>
+  <p>Alle Spiele bis 21:00 Uhr MESZ · plus alle 🇩🇪 DFB-Spiele</p>
+  <div class="badge">104 Spiele · 11. Juni – 19. Juli 2026 · USA / Kanada / Mexiko</div>
+</header>
 
-    <section class="karte">
-      <h2>👨‍👩‍👧‍👦 Wer schaut wann?</h2>
-      <ul>
-        <li>Gruppenspiele – gemeinsames Public Viewing im Garten</li>
-        <li>K.-o.-Runde – Termine im Familienkalender eintragen</li>
-        <li>Finale – großes Familienessen</li>
-      </ul>
-    </section>
+<div class="stats" id="statsBar">
+  <div class="stat"><div class="stat-num" id="sTotal">0</div><div class="stat-label">Spiele gesamt</div></div>
+  <div class="stat"><div class="stat-num" id="sTagesspiele">0</div><div class="stat-label">bis 21:00 + DFB</div></div>
+  <div class="stat"><div class="stat-num" id="sDe">3</div><div class="stat-label">DE-Spiele sichtbar</div></div>
+  <div class="stat"><div class="stat-num" id="sFree">0</div><div class="stat-label">Free-TV (ARD/ZDF)</div></div>
+</div>
 
-    <section class="karte">
-      <h2>📝 To-do</h2>
-      <ul>
-        <li>Spielplan ausdrucken</li>
-        <li>Tippspiel für die Familie organisieren</li>
-        <li>Snacks &amp; Getränke planen</li>
-      </ul>
-    </section>
-  </main>
+<div class="filter-bar">
+  <span>Filter:</span>
+  <button class="btn active" onclick="setFilter('all', this)">Alle bis 21:00 + DFB</button>
+  <button class="btn" onclick="setFilter('frueh', this)">Früh (bis 18:00)</button>
+  <button class="btn" onclick="setFilter('abend', this)">18:00–21:00</button>
+  <button class="btn de" onclick="setFilter('de', this)">🇩🇪 DFB-Spiele</button>
+  <button class="btn" onclick="setFilter('free', this)">📺 Free-TV</button>
+</div>
 
-  <footer>
-    Familienplan · zuletzt aktualisiert Juni 2026 · erstellt mit ❤️
-  </footer>
+<div class="main" id="mainContent"></div>
+
+<footer>
+  Alle Zeiten in MESZ · Quelle: FIFA / wettfreunde.net / feverpitch.de · Stand: 9. Juni 2026<br>
+  KO-Rundenspiele: Gegner erst nach Gruppenphase bekannt · TV-Zuordnung der KO-Spiele wird noch vervollständigt
+</footer>
+
+<script>
+// ============================================================
+// SPIELDATEN – nur Anstoß ≤ 21:00 Uhr MESZ
+// ============================================================
+const SPIELE = [
+  // ── GRUPPENPHASE ──────────────────────────────────────────
+  { datum:"Do, 11.06.", uhrzeit:"21:00", teams:"Mexiko – Südafrika",       ort:"Mexiko-Stadt", gruppe:"A",  phase:"Gruppe", de:false, tv:"ZDF" },
+  { datum:"Fr, 12.06.", uhrzeit:"21:00", teams:"Kanada – Bosnien",         ort:"Toronto",       gruppe:"B",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"Sa, 13.06.", uhrzeit:"21:00", teams:"Katar – Schweiz",          ort:"San Francisco", gruppe:"B",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"So, 14.06.", uhrzeit:"19:00", teams:"🇩🇪 Deutschland – Curaçao", ort:"Houston",       gruppe:"E",  phase:"Gruppe", de:true,  tv:"ARD" },
+  { datum:"So, 14.06.", uhrzeit:"22:00", teams:"Niederlande – Japan",      ort:"Dallas",        gruppe:"F",  phase:"Gruppe", de:false, tv:"Magenta" },
+  // 14.06 00:00 Brasilien–Marokko → nach Mitternacht, raus
+  // 14.06 03:00 Haiti–Schottland → raus
+  { datum:"Mo, 15.06.", uhrzeit:"18:00", teams:"Spanien – Kap Verde",      ort:"Atlanta",       gruppe:"H",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"Mo, 15.06.", uhrzeit:"21:00", teams:"Belgien – Ägypten",        ort:"Seattle",       gruppe:"G",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"Di, 16.06.", uhrzeit:"21:00", teams:"Frankreich – Senegal",     ort:"New Jersey",    gruppe:"I",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"Mi, 17.06.", uhrzeit:"19:00", teams:"Portugal – DR Kongo",      ort:"Houston",       gruppe:"K",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"Mi, 17.06.", uhrzeit:"22:00", teams:"England – Kroatien",       ort:"Dallas",        gruppe:"L",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"Do, 18.06.", uhrzeit:"18:00", teams:"Tschechien – Südafrika",   ort:"Atlanta",       gruppe:"A",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"Do, 18.06.", uhrzeit:"21:00", teams:"Schweiz – Bosnien",        ort:"Los Angeles",   gruppe:"B",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"Fr, 19.06.", uhrzeit:"21:00", teams:"USA – Australien",         ort:"Seattle",       gruppe:"D",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"Sa, 20.06.", uhrzeit:"19:00", teams:"Niederlande – Schweden",   ort:"Houston",       gruppe:"F",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"Sa, 20.06.", uhrzeit:"22:00", teams:"🇩🇪 Deutschland – Elfenbeinküste", ort:"Toronto", gruppe:"E", phase:"Gruppe", de:true, tv:"ZDF" },
+  { datum:"So, 21.06.", uhrzeit:"18:00", teams:"Spanien – Saudi-Arabien",  ort:"Atlanta",       gruppe:"H",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"So, 21.06.", uhrzeit:"21:00", teams:"Belgien – Iran",           ort:"Los Angeles",   gruppe:"G",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"Mo, 22.06.", uhrzeit:"19:00", teams:"Argentinien – Österreich", ort:"Dallas",        gruppe:"J",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"Di, 23.06.", uhrzeit:"19:00", teams:"Portugal – Usbekistan",    ort:"Houston",       gruppe:"K",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"Di, 23.06.", uhrzeit:"22:00", teams:"England – Ghana",          ort:"Boston",        gruppe:"L",  phase:"Gruppe", de:false, tv:"Magenta" },
+  // 24.06 beide Gruppe-B Spiele um 21:00 → rein
+  { datum:"Mi, 24.06.", uhrzeit:"21:00", teams:"Schweiz – Kanada",         ort:"Vancouver",     gruppe:"B",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"Mi, 24.06.", uhrzeit:"21:00", teams:"Bosnien – Katar",          ort:"Seattle",       gruppe:"B",  phase:"Gruppe", de:false, tv:"Magenta" },
+  // 25.06 Ecuador–Deutschland 22:00 → DFB-Spiel, immer anzeigen
+  { datum:"Do, 25.06.", uhrzeit:"22:00", teams:"🇩🇪 Ecuador – Deutschland",  ort:"New York (MetLife)", gruppe:"E", phase:"Gruppe", de:true, tv:"ARD" },
+  // 25.06 Curacao–Elfenbeinküste 22:00 → raus
+  // Aber: Schottland-Brasilien und Marokko-Haiti um 00:00 raus
+  // 26.06 Norwegen–Frankreich und Senegal–Irak 21:00 → rein
+  { datum:"Fr, 26.06.", uhrzeit:"21:00", teams:"Norwegen – Frankreich",    ort:"Boston",        gruppe:"I",  phase:"Gruppe", de:false, tv:"Magenta" },
+  { datum:"Fr, 26.06.", uhrzeit:"21:00", teams:"Senegal – Irak",           ort:"Toronto",       gruppe:"I",  phase:"Gruppe", de:false, tv:"Magenta" },
+
+  // ── SECHZEHNTELFINALE (28. Juni – 3. Juli) ────────────────
+  // Anstoßzeiten in KO: meist 19:00 / 21:00 / 22:00 MESZ
+  // 28.06 Spiel 73: 21:00 MESZ (2./Gr.A – 2./Gr.B, LA) ← laut Sky
+  { datum:"So, 28.06.", uhrzeit:"21:00", teams:"2. Gr. A – 2. Gr. B",     ort:"Los Angeles",   gruppe:"1/16", phase:"1/16-Finale", de:false, tv:"?" },
+  // 29.06: laut Spielplänen meist 21:00 + 00:00; nehmen 21:00
+  { datum:"Mo, 29.06.", uhrzeit:"21:00", teams:"1/16-Finale (Spiel 2)",    ort:"N.N.",           gruppe:"1/16", phase:"1/16-Finale", de:false, tv:"?" },
+  { datum:"Di, 30.06.", uhrzeit:"19:00", teams:"1/16-Finale (Spiel 3)",    ort:"N.N.",           gruppe:"1/16", phase:"1/16-Finale", de:false, tv:"?" },
+  { datum:"Di, 30.06.", uhrzeit:"21:00", teams:"1/16-Finale (Spiel 4)",    ort:"N.N.",           gruppe:"1/16", phase:"1/16-Finale", de:false, tv:"?" },
+  { datum:"Mi, 01.07.", uhrzeit:"19:00", teams:"1/16-Finale (Spiel 5)",    ort:"N.N.",           gruppe:"1/16", phase:"1/16-Finale", de:false, tv:"?" },
+  { datum:"Mi, 01.07.", uhrzeit:"21:00", teams:"1/16-Finale (Spiel 6)",    ort:"N.N.",           gruppe:"1/16", phase:"1/16-Finale", de:false, tv:"?" },
+  { datum:"Do, 02.07.", uhrzeit:"19:00", teams:"1/16-Finale (Spiel 7)",    ort:"N.N.",           gruppe:"1/16", phase:"1/16-Finale", de:false, tv:"?" },
+  { datum:"Do, 02.07.", uhrzeit:"21:00", teams:"1/16-Finale (Spiel 8)",    ort:"N.N.",           gruppe:"1/16", phase:"1/16-Finale", de:false, tv:"?" },
+  { datum:"Fr, 03.07.", uhrzeit:"21:00", teams:"1/16-Finale (Spiel 9)",    ort:"N.N.",           gruppe:"1/16", phase:"1/16-Finale", de:false, tv:"?" },
+
+  // ── ACHTELFINALE (4.–7. Juli) ─────────────────────────────
+  // Laut Quellen: Anstoßzeiten 18:00 bis 2:00; nehmen die ≤21
+  { datum:"Sa, 04.07.", uhrzeit:"18:00", teams:"Achtelfinale (Spiel 1)",   ort:"N.N.",           gruppe:"AF",  phase:"Achtelfinale", de:false, tv:"?" },
+  { datum:"Sa, 04.07.", uhrzeit:"21:00", teams:"Achtelfinale (Spiel 2)",   ort:"N.N.",           gruppe:"AF",  phase:"Achtelfinale", de:false, tv:"?" },
+  { datum:"So, 05.07.", uhrzeit:"18:00", teams:"Achtelfinale (Spiel 3)",   ort:"N.N.",           gruppe:"AF",  phase:"Achtelfinale", de:false, tv:"?" },
+  { datum:"So, 05.07.", uhrzeit:"21:00", teams:"Achtelfinale (Spiel 4)",   ort:"N.N.",           gruppe:"AF",  phase:"Achtelfinale", de:false, tv:"?" },
+  { datum:"Mo, 06.07.", uhrzeit:"18:00", teams:"Achtelfinale (Spiel 5)",   ort:"N.N.",           gruppe:"AF",  phase:"Achtelfinale", de:false, tv:"?" },
+  { datum:"Mo, 06.07.", uhrzeit:"21:00", teams:"Achtelfinale (Spiel 6)",   ort:"N.N.",           gruppe:"AF",  phase:"Achtelfinale", de:false, tv:"?" },
+  { datum:"Di, 07.07.", uhrzeit:"18:00", teams:"Achtelfinale (Spiel 7)",   ort:"N.N.",           gruppe:"AF",  phase:"Achtelfinale", de:false, tv:"?" },
+  { datum:"Di, 07.07.", uhrzeit:"21:00", teams:"Achtelfinale (Spiel 8)",   ort:"N.N.",           gruppe:"AF",  phase:"Achtelfinale", de:false, tv:"?" },
+
+  // ── VIERTELFINALE (9.–11. Juli) ───────────────────────────
+  { datum:"Do, 09.07.", uhrzeit:"21:00", teams:"Viertelfinale (Spiel 1)",  ort:"N.N.",           gruppe:"VF",  phase:"Viertelfinale", de:false, tv:"?" },
+  { datum:"Fr, 10.07.", uhrzeit:"21:00", teams:"Viertelfinale (Spiel 2)",  ort:"N.N.",           gruppe:"VF",  phase:"Viertelfinale", de:false, tv:"?" },
+  { datum:"Sa, 11.07.", uhrzeit:"21:00", teams:"Viertelfinale (Spiel 3)",  ort:"N.N.",           gruppe:"VF",  phase:"Viertelfinale", de:false, tv:"?" },
+
+  // ── HALBFINALE (14.–15. Juli) ─────────────────────────────
+  { datum:"Di, 14.07.", uhrzeit:"21:00", teams:"Halbfinale (Spiel 1)",     ort:"N.N.",           gruppe:"HF",  phase:"Halbfinale", de:false, tv:"ARD/ZDF" },
+  { datum:"Mi, 15.07.", uhrzeit:"21:00", teams:"Halbfinale (Spiel 2)",     ort:"N.N.",           gruppe:"HF",  phase:"Halbfinale", de:false, tv:"ARD/ZDF" },
+
+  // ── SPIEL UM PLATZ 3 (18. Juli) ───────────────────────────
+  { datum:"Sa, 18.07.", uhrzeit:"21:00", teams:"Spiel um Platz 3",         ort:"N.N.",           gruppe:"P3",  phase:"Spiel um Platz 3", de:false, tv:"?" },
+
+  // ── FINALE (19. Juli) ─────────────────────────────────────
+  { datum:"So, 19.07.", uhrzeit:"21:00", teams:"🏆 FINALE",               ort:"New Jersey",     gruppe:"Finale", phase:"Finale", de:false, tv:"ARD/ZDF" },
+];
+
+// ── Hilfsfunktionen ─────────────────────────────────────────
+function uhrzeitZuMin(str) {
+  const [h, m] = str.split(":").map(Number);
+  return h * 60 + m;
+}
+function tvClass(tv) {
+  if (!tv || tv==="?") return "tv-tag tv-magenta";
+  if (tv.includes("ARD")) return "tv-tag tv-ard";
+  if (tv.includes("ZDF")) return "tv-tag tv-zdf";
+  if (tv.includes("ARD/ZDF")) return "tv-tag tv-ard";
+  return "tv-tag tv-magenta";
+}
+function tvLabel(tv) {
+  if (!tv || tv==="?") return "MagentaTV*";
+  return tv;
+}
+function gruppeClass(g) {
+  if (g==="Finale") return "group-tag final";
+  if (g==="HF" || g==="VF" || g==="AF" || g==="1/16" || g==="P3") return "group-tag ko";
+  return "group-tag";
+}
+function gruppeLabel(g, phase) {
+  if (g.length===1 || g.length===2) return "Gruppe "+g;
+  return phase;
+}
+
+let currentFilter = 'all';
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-bar .btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function matchesFilter(spiel) {
+  const min = uhrzeitZuMin(spiel.uhrzeit);
+  // DFB-Spiele immer anzeigen (außer beim reinen Zeitfilter "frueh" oder "abend")
+  if (currentFilter==='all') return min <= 21*60 || spiel.de;
+  if (currentFilter==='frueh') return min <= 18*60 || spiel.de;
+  if (currentFilter==='abend') return (min >= 18*60 && min <= 21*60) || spiel.de;
+  if (currentFilter==='de') return spiel.de;
+  if (currentFilter==='free') return (spiel.tv && spiel.tv!=="?" && !spiel.tv.includes("Magenta")) || spiel.de;
+  return true;
+}
+
+function render() {
+  const container = document.getElementById('mainContent');
+  const filtered = SPIELE.filter(matchesFilter);
+
+  // Phasen gruppieren
+  const phasen = {};
+  filtered.forEach(s => {
+    if (!phasen[s.phase]) phasen[s.phase] = {};
+    if (!phasen[s.phase][s.datum]) phasen[s.phase][s.datum] = [];
+    phasen[s.phase][s.datum].push(s);
+  });
+
+  // Stats
+  const total = SPIELE.length;
+  const tagsüber = SPIELE.length; // alle im Datensatz sind ≤21
+  const deVisible = filtered.filter(s=>s.de).length;
+  const freeVisible = filtered.filter(s=>s.tv && s.tv!=="?" && !s.tv.includes("Magenta")).length;
+  document.getElementById('sTotal').textContent = total;
+  document.getElementById('sTagesspiele').textContent = tagsüber;
+  document.getElementById('sDe').textContent = filtered.filter(s=>s.de).length;
+  document.getElementById('sFree').textContent = freeVisible;
+
+  if (filtered.length===0) {
+    container.innerHTML = '<div class="empty-state">Keine Spiele für diesen Filter.</div>';
+    return;
+  }
+
+  let html = '';
+  const phaseOrder = ["Gruppe","1/16-Finale","Achtelfinale","Viertelfinale","Halbfinale","Spiel um Platz 3","Finale"];
+  phaseOrder.forEach(phase => {
+    if (!phasen[phase]) return;
+    const tage = Object.keys(phasen[phase]);
+    if (!tage.length) return;
+    html += `<div class="phase-block">`;
+    html += `<div class="phase-title">${phaseLabel(phase)}</div>`;
+    tage.forEach(datum => {
+      const spiele = phasen[phase][datum];
+      html += `<div class="day-block">`;
+      html += `<div class="day-header">${datum} <span class="count">${spiele.length} Spiel${spiele.length>1?'e':''}</span></div>`;
+      spiele.forEach(s => {
+        const isDE = s.de;
+        const min = uhrzeitZuMin(s.uhrzeit);
+        const isLate = isDE && min > 21*60;
+        html += `<div class="game${isDE?' highlighted':''}">
+          <div class="time-badge${isLate?' latenight':''}">
+            ${s.uhrzeit}
+            <small>${isLate ? '⚠️ spät' : 'MESZ'}</small>
+          </div>
+          <div class="divider"></div>
+          <div class="teams">
+            <div class="matchup">${s.teams}</div>
+            <div class="meta">
+              <span class="${gruppeClass(s.gruppe)}">${gruppeLabel(s.gruppe, s.phase)}</span>
+              <span style="color:#bbb">📍 ${s.ort}</span>
+              <span class="${tvClass(s.tv)}">${tvLabel(s.tv)}</span>
+            </div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function phaseLabel(p) {
+  const map = {
+    "Gruppe":"Gruppenphase (11. – 28. Juni)",
+    "1/16-Finale":"Sechzehntelfinale (28. Juni – 3. Juli)",
+    "Achtelfinale":"Achtelfinale (4. – 7. Juli)",
+    "Viertelfinale":"Viertelfinale (9. – 11. Juli)",
+    "Halbfinale":"Halbfinale (14. – 15. Juli)",
+    "Spiel um Platz 3":"Spiel um Platz 3 (18. Juli)",
+    "Finale":"Finale (19. Juli)"
+  };
+  return map[p] || p;
+}
+
+render();
+</script>
 </body>
 </html>
